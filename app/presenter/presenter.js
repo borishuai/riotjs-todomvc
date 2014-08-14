@@ -22,17 +22,23 @@ $(function() {
   }).on('click', '.destroy', function() {
     var id = $(this).closest('li').data('task');
     todo.remove(id);
-  });
+  }).on('dblclick', '.todo-task label', function() {
+    $(this).focus().closest('li').addClass('editing');
+  }).on('blur', '.edit', function() {console.log(3);
+    var id = $(this).closest('li').data('task');
+    todo.edit(id, $(this).val());
+    $(this).closest('li').removeClass('editing');
+  })
 
   riot.route(function(hash) {
-    todo.trigger('load', hash.slice(2));
+    filterState = hash.slice(2);
+    todo.trigger('load', filterState);
   });
 
-  todo.on('add remove', reload);
+  todo.on('add remove edit load', reload);
   todo.on('add remove toggle load toggleAll', counts);
   todo.on('toggleAll', toggleAll);
   todo.on('toggle', toggle);
-  todo.on('load', load);
 
   function load(filter) {
     filterState = filter;
@@ -60,7 +66,7 @@ $(function() {
   }
 
   function reload() {
-    var items = todo.items(), task;
+    var items = todo.items(filterState), task;
     $todoList.empty();
 
     items.forEach(function(item) {

@@ -16,12 +16,9 @@ function Todo() {
     self.trigger('add', item);
   };
 
-    self.edit = function(item) {
-        if (!item.name) {
-          return self.remove(item.id);
-        }
-
-        items[item.id] = item;
+    self.edit = function(id, name) {
+        var item = items[id];
+        item.name = name;
         self.trigger('edit', item);
     };
 
@@ -45,9 +42,10 @@ function Todo() {
     };
 
     // @param filter: <empty>, id, 'active', 'completed'
-    self.items = function() {
-      console.log('items: ', items);
-      return Object.keys(items).map(function(id) {
+    self.items = function(filterState) {
+      return Object.keys(items).filter(function(id) {
+        return matchFilter(items[id], filterState);
+      }).map(function(id) {
         return items[id];
       });
     };
@@ -61,16 +59,7 @@ function Todo() {
         //storage.put(items);
     });
 
-    // Private methods
-    function generateId() {
-        var keys = Object.keys(items), i = keys.length;
-        return (i ? items[keys[i - 1]].id + 1 : i + 1);
-    }
-
-
-    function matchFilter(item, filter) {
-        return !filter ||
-            filter.toString() === item.id.toString() ||
-            filter === (item.done ? 'completed' : 'active');
+    function matchFilter(item, filter) {console.log('item: ', item);
+      return !filter || filter === 'all' || (filter === 'active' && !item.completed) || (filter === 'completed' && item.completed);
     }
 };
