@@ -1,10 +1,12 @@
 var storage = function(){
+  var key = 'todo-tasks';
+
   return {
-    setItem: function(id, item) {
-      localStorage.setItem(id, JSON.stringify(item));
+    setItems: function(items) {
+      localStorage.setItem(key, JSON.stringify(items));
     },
-    getItem: function(id) {
-      return JSON.parse(localStorage.getItem(id));
+    getItems: function(items) {
+      return JSON.parse(localStorage.getItem(key));
     }
   };
 }();

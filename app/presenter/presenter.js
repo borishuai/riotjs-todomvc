@@ -6,11 +6,13 @@ $(function() {
       filterState = null,
       $todoList = $root.find('#todo-list'),
       template = $("#task-template").html(),
-      footerTemplate = $("#footer-template").html();
+      footerTemplate = $("#footer-template").html(),
+      ENTER_KEY = 13,
+      ESC_KEY = 27;
 
   $root.on('keypress', '#new-todo', function(event) {
     var value = $(this).val();
-    if ((event.which == 13) && value) {
+    if ((event.which == ENTER_KEY) && value) {
       todo.add(value);
       this.value = '';
     }
@@ -22,12 +24,25 @@ $(function() {
   }).on('click', '.destroy', function() {
     var id = $(this).closest('li').data('task');
     todo.remove(id);
+  }).on('click', '#clear-completed', function() {
+    todo.removeCompleted();
   }).on('dblclick', '.todo-task label', function() {
     $(this).focus().closest('li').addClass('editing');
   }).on('blur', '.edit', function() {console.log(3);
     var id = $(this).closest('li').data('task');
     todo.edit(id, $(this).val());
-    $(this).closest('li').removeClass('editing');
+  }).on('keyup', '.edit', function(event) {
+    var id;
+    switch(event.which) {
+      case ENTER_KEY: 
+        id = $(this).closest('li').data('task');
+        todo.edit(id, $(this).val());
+        break;
+      case ESC_KEY: 
+        $(this).val($(this).closest('li').find('label').text());
+        $(this).closest('li').removeClass('editing');
+        break;
+    }
   })
 
   riot.route(function(hash) {
@@ -35,14 +50,13 @@ $(function() {
     todo.trigger('load', filterState);
   });
 
-  todo.on('add remove edit load', reload);
+  todo.on('add remove edit load init', reload);
   todo.on('add remove toggle load toggleAll', counts);
   todo.on('toggleAll', toggleAll);
   todo.on('toggle', toggle);
-
-  function load(filter) {
-    filterState = filter;
-  }
+  
+  //init data when start page
+  todo.initItems();
 
   function toggle(id) {
     $todoList.find('#task_' + id).toggleClass('completed');
@@ -70,21 +84,24 @@ $(function() {
     $todoList.empty();
 
     items.forEach(function(item) {
-      var task = riot.render(template, item);
-      $todoList.append(task);
+      var $task = $(riot.render(template, item));
+      item.completed && $task.addClass('completed');
+      $todoList.append($task);
     });
     
     
   }
 
   function counts() {
-    var items = todo.items(),
+    var left = todo.items('active').length,
+        completed = todo.items('completed').length,
         footer, footerParam;
-    if (items.length > 0) {
+    if (left || completed) {
       footerParam = {
-        items: items.length,
-        completed: items.length
+        items: left,
+        completed: todo.items('completed').length
       };
+
 
       footer = riot.render(footerTemplate, footerParam);
       $('#footer').html(footer);

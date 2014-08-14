@@ -3,16 +3,20 @@
 function Todo() {
   var self = riot.observable(this);
   var items = {};
+
+  self.initItems = function() {
+    items = storage.getItems() ? storage.getItems() : {};
+    self.trigger('init');
+  };
         
   self.add = function(name) {
-    var id = util.getUniqueId();
+    var id = Date.now();
     var item = {
       id: id,
       name: name,
       completed: false
     };
     items[id] = item;
-    storage.setItem(id, item);
     self.trigger('add', item);
   };
 
@@ -26,6 +30,12 @@ function Todo() {
         delete items[id];
 
         self.trigger('remove', id);
+    };
+
+    self.removeCompleted = function() {
+      self.items('completed').forEach(function(item) {
+        item.completed && self.remove(item.id);
+      });
     };
 
     self.toggle = function(id) {
@@ -56,10 +66,12 @@ function Todo() {
 
     // sync database
     self.on('add remove toggle edit', function() {
-        //storage.put(items);
+      storage.setItems(items);
     });
 
-    function matchFilter(item, filter) {console.log('item: ', item);
-      return !filter || filter === 'all' || (filter === 'active' && !item.completed) || (filter === 'completed' && item.completed);
+    function matchFilter(item, filter) {console.log('filter',filter, item);
+      var result = !filter || filter === 'all' || (filter === 'active' && !item.completed) || (filter === 'completed' && item.completed);
+      console.log('result: ', result);
+      return result;//!filter || filter === 'all' || (filter === 'active' && !item.completed) || (filter === 'completed' && item.completed);
     }
 };
